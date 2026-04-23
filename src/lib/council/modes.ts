@@ -41,9 +41,12 @@ function seat(
 }
 
 const CHAIR_PREFERRED = [
-  "deepseek/deepseek-chat-v3-0324:free",
   "meta-llama/llama-3.3-70b-instruct:free",
-  "qwen/qwen-2.5-72b-instruct:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "google/gemma-4-31b-it:free",
+  "nousresearch/hermes-3-llama-3.1-405b:free",
+  "openai/gpt-oss-120b:free",
 ];
 
 const CHAIR_SEAT = seat(
@@ -70,12 +73,14 @@ const SKILLS_SEATS: Seat[] = [
   seat("factchecker", "The Fact-checker", "Verifies and caveats.", CHAIR_PREFERRED, "Review the Writer's draft. Flag claims that need citations, hedges, or are likely wrong."),
 ];
 
+// Each Flavour seat prefers a *different provider family* for real flavour
+// variety. Ordered lists fall back to nearest free equivalent if primary is gone.
 const FLAVOUR_SEATS: Seat[] = [
-  { ...PERSPECTIVES_SEATS[0], preferredModels: ["meta-llama/llama-3.3-70b-instruct:free", "meta-llama/llama-3.1-70b-instruct:free"] },
-  { ...PERSPECTIVES_SEATS[1], preferredModels: ["qwen/qwen-2.5-72b-instruct:free"] },
-  { ...PERSPECTIVES_SEATS[2], preferredModels: ["deepseek/deepseek-chat-v3-0324:free", "deepseek/deepseek-v3-base:free"] },
-  { ...PERSPECTIVES_SEATS[3], preferredModels: ["google/gemma-2-9b-it:free", "google/gemma-3-27b-it:free"] },
-  { ...PERSPECTIVES_SEATS[4], preferredModels: ["mistralai/mistral-small-24b-instruct-2501:free", "mistralai/mistral-7b-instruct:free"] },
+  { ...PERSPECTIVES_SEATS[0], preferredModels: ["meta-llama/llama-3.3-70b-instruct:free", "nousresearch/hermes-3-llama-3.1-405b:free"] },
+  { ...PERSPECTIVES_SEATS[1], preferredModels: ["qwen/qwen3-next-80b-a3b-instruct:free", "qwen/qwen3-coder:free"] },
+  { ...PERSPECTIVES_SEATS[2], preferredModels: ["openai/gpt-oss-120b:free", "openai/gpt-oss-20b:free"] },
+  { ...PERSPECTIVES_SEATS[3], preferredModels: ["google/gemma-4-31b-it:free", "google/gemma-3-27b-it:free"] },
+  { ...PERSPECTIVES_SEATS[4], preferredModels: ["nvidia/nemotron-3-super-120b-a12b:free", "z-ai/glm-4.5-air:free", "minimax/minimax-m2.5:free"] },
 ];
 
 const DEBATE_SEATS: Seat[] = [

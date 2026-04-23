@@ -5,9 +5,12 @@ export type FreeModel = {
 };
 
 const CHAIR_PRIORITY = [
-  "deepseek/deepseek-chat-v3-0324:free",
   "meta-llama/llama-3.3-70b-instruct:free",
-  "qwen/qwen-2.5-72b-instruct:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "google/gemma-4-31b-it:free",
+  "nousresearch/hermes-3-llama-3.1-405b:free",
+  "openai/gpt-oss-120b:free",
 ];
 
 let cache: { at: number; models: FreeModel[] } | null = null;
@@ -22,8 +25,14 @@ export async function getFreeModels(): Promise<FreeModel[]> {
   const res = await fetch("https://openrouter.ai/api/v1/models");
   if (!res.ok) throw new Error(`OpenRouter models fetch failed: ${res.status}`);
   const json = (await res.json()) as { data: FreeModel[] };
+  // OpenRouter marks *text-chat* free models with `:free` suffix. Audio/video
+  // preview models (e.g. lyria-3) can also have pricing=0 but aren't chat-usable
+  // from a completions endpoint — filter on the suffix to avoid them.
   const models = (json.data ?? []).filter(
-    (m) => m.pricing?.prompt === "0" && m.pricing?.completion === "0",
+    (m) =>
+      m.pricing?.prompt === "0" &&
+      m.pricing?.completion === "0" &&
+      (m.id.endsWith(":free") || m.id === "openrouter/free"),
   );
   cache = { at: Date.now(), models };
   return models;
