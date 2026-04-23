@@ -3,9 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { Selector, type SelectorValue } from "@/components/council/selector";
 import { QuestionInput } from "@/components/council/question-input";
 import { TheatreView } from "@/components/council/theatre-view";
+import { WhiteboardView } from "@/components/council/whiteboard-view";
 import { useCouncilRun } from "@/hooks/use-council-run";
 import { useTts } from "@/hooks/use-tts";
 import { useMuted } from "@/components/council/mute-toggle";
+import { useView } from "@/components/council/view-switcher";
 
 export default function Home() {
   const [sel, setSel] = useState<SelectorValue>({
@@ -16,6 +18,7 @@ export default function Home() {
   const { state, run } = useCouncilRun();
   const { speak } = useTts();
   const { muted } = useMuted();
+  const [view] = useView();
   const lastSpokenRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -73,9 +76,17 @@ export default function Home() {
         </div>
       )}
 
-      {started && (
-        <TheatreView modeId={sel.modeId} selector={sel} state={state} />
-      )}
+      {started &&
+        (view === "theatre" ? (
+          <TheatreView modeId={sel.modeId} selector={sel} state={state} />
+        ) : (
+          <WhiteboardView
+            modeId={sel.modeId}
+            selector={sel}
+            state={state}
+            question={question}
+          />
+        ))}
     </div>
   );
 }
