@@ -1,32 +1,81 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Selector, type SelectorValue } from "@/components/council/selector";
-import { Badge } from "@/components/ui/badge";
+import { QuestionInput } from "@/components/council/question-input";
+import { TheatreView } from "@/components/council/theatre-view";
+import { useCouncilRun } from "@/hooks/use-council-run";
+import { useTts } from "@/hooks/use-tts";
+import { useMuted } from "@/components/council/mute-toggle";
 
 export default function Home() {
   const [sel, setSel] = useState<SelectorValue>({
     modeId: "flavour",
     seatOverrides: {},
   });
+  const [question, setQuestion] = useState("");
+  const { state, run } = useCouncilRun();
+  const { speak } = useTts();
+  const { muted } = useMuted();
+  const lastSpokenRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const r = state.chair.verdict?.recommendation;
+    if (r && lastSpokenRef.current !== r) {
+      lastSpokenRef.current = r;
+      speak(r, muted);
+    }
+  }, [state.chair.verdict, muted, speak]);
+
+  const handleAsk = () => {
+    run({
+      modeId: sel.modeId,
+      question,
+      overrides: {
+        seats: Object.keys(sel.seatOverrides).length
+          ? sel.seatOverrides
+          : undefined,
+        chair: sel.chairOverride,
+      },
+    });
+  };
+
+  const started =
+    state.running ||
+    Object.keys(state.seats).length > 0 ||
+    state.chair.status !== "idle";
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-3 text-center">
-        <div className="flex justify-center">
-          <Badge variant="outline" className="gap-2 text-xs uppercase tracking-widest">
-            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Selector live · Ask coming next
-          </Badge>
+      {!started && (
+        <div className="flex flex-col gap-3 text-center">
+          <h1 className="font-mono text-4xl font-semibold tracking-tighter sm:text-5xl">
+            Ask your council
+          </h1>
+          <p className="mx-auto max-w-xl text-balance text-sm text-muted-foreground">
+            Five free LLMs deliberate, then the Chair distils a structured verdict.
+            Pick your roster below and ask by voice or text.
+          </p>
         </div>
-        <h1 className="font-mono text-4xl font-semibold tracking-tighter sm:text-5xl">
-          Ask your council
-        </h1>
-        <p className="mx-auto max-w-xl text-balance text-sm text-muted-foreground">
-          Configure the roster below. Click any seat to swap in a different
-          free model. In the next push you&rsquo;ll be able to ask it a question.
-        </p>
-      </div>
-      <Selector value={sel} onChange={setSel} />
+      )}
+
+      {!started && <Selector value={sel} onChange={setSel} />}
+
+      <QuestionInput
+        value={question}
+        onChange={setQuestion}
+        onSubmit={handleAsk}
+        disabled={state.running}
+      />
+
+      {state.globalError && (
+        <div className="rounded-md border border-[color:var(--color-seat-error)] bg-card/50 p-3 text-sm">
+          {state.globalError}
+        </div>
+      )}
+
+      {started && (
+        <TheatreView modeId={sel.modeId} selector={sel} state={state} />
+      )}
     </div>
   );
 }
